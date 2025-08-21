@@ -144,7 +144,7 @@ function Show-Status {
 }
 
 # === Function: Initial Installation ===
-function Install-Proxy-PowerShellAutostart {
+function Install-Proxy {
     Write-Host "Installing Proxy..." -ForegroundColor Yellow
     
     # Install Python if needed
