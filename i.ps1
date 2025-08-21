@@ -10,13 +10,21 @@ $ConfigFile = Join-Path $InstallPath "config.json"
 $RegPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run"
 $RegName = "ProxyService"
 
-# === Function: Ensure Python ===
-function Ensure-Python {
-    try {
-        $pyver = & python --version 2>&1
-        if ($pyver -match "Python") { return $true }
-    } catch {
-        return $false
+# === Function: Ask user to install Python ===
+function Ask-PythonInstall {
+    $answer = Read-Host "Do you want to install Python? (y/N)"
+    if ($answer -eq 'y' -or $answer -eq 'Y') {
+        Write-Host "Installing Python..." -ForegroundColor Yellow
+        try {
+            Invoke-WebRequest -Uri $PythonInstallerUrl -OutFile $PythonInstaller -UseBasicParsing -ErrorAction Stop
+            Start-Process -FilePath $PythonInstaller -ArgumentList "/quiet InstallAllUsers=1 PrependPath=1 Include_test=0" -Wait -WindowStyle Hidden
+            Remove-Item $PythonInstaller -Force
+            Write-Host "Python installed successfully" -ForegroundColor Green
+        } catch {
+            Write-Host "Error installing Python: $($_.Exception.Message)" -ForegroundColor Red
+        }
+    } else {
+        Write-Host "Skipping Python installation" -ForegroundColor Cyan
     }
 }
 
@@ -127,20 +135,8 @@ function Install-Proxy {
     Write-Host "Installing Proxy..." -ForegroundColor Yellow
     
     # Install Python if needed
-    if (-not (Ensure-Python310)) {
-        Write-Host "Installing Python 3.10..." -ForegroundColor Yellow
-        try {
-            Invoke-WebRequest -Uri $PythonInstallerUrl -OutFile $PythonInstaller -UseBasicParsing -ErrorAction Stop
-            Start-Process -FilePath $PythonInstaller -ArgumentList "/quiet InstallAllUsers=1 PrependPath=1 Include_test=0" -Wait -WindowStyle Hidden
-            Remove-Item $PythonInstaller -Force
-            Write-Host "Python 3.10 installed" -ForegroundColor Green
-        } catch { 
-            Write-Host "Python installation error: $($_.Exception.Message)" -ForegroundColor Red
-            return $false
-        }
-    } else {
-        Write-Host "Python 3.10 already installed" -ForegroundColor Green
-    }
+    Ask-PythonInstall
+
     
     # Download project archive
     try {
