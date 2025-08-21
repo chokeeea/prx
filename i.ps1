@@ -72,32 +72,18 @@ function Start-Proxy {
         Write-Host "Starting Proxy..." -ForegroundColor Green
 
         try {
-            # Исправленный запуск VBS с правильной передачей аргументов
-            $process = Start-Process -FilePath "wscript.exe" `
-                                     -ArgumentList @($VbsFile, $BatFile) `
-                                     -WindowStyle Hidden -PassThru
+            Start-Process -FilePath "wscript.exe" `
+                         -ArgumentList @($VbsFile, $BatFile) `
+                         -WindowStyle Hidden
 
-            # Небольшая пауза для инициализации процесса
-            Start-Sleep -Milliseconds 500
-            
-            # Проверяем, что процесс запустился
-            if ($process -and !$process.HasExited) {
-                Write-Host "Proxy is running in the background (PID $($process.Id))" -ForegroundColor Green
-                return $true
-            } else {
-                Write-Host "Failed to start proxy process!" -ForegroundColor Red
-                return $false
-            }
+            Write-Host "Proxy started" -ForegroundColor Green
         }
         catch {
             Write-Host "Error starting proxy: $_" -ForegroundColor Red
-            return $false
         }
     } else {
         Write-Host "Proxy files not found at $BatFile!" -ForegroundColor Red
-        return $false
     }
-}
 
 
 # === Function: Stop Proxy ===
