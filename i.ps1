@@ -68,14 +68,34 @@ function Show-Menu {
 
 # === Function: Start Proxy ===
 function Start-Proxy {
-    if (Test-Path $BatFile) {
+    if (Test-Path $BatFile -PathType Leaf -ErrorAction SilentlyContinue) {
         Write-Host "Starting Proxy..." -ForegroundColor Green
-        Start-Process -WindowStyle Hidden -FilePath "wscript.exe" -ArgumentList "`"$VbsFile`" `"$BatFile`""
-        Write-Host "Proxy is running in the background" -ForegroundColor Green
+
+        try {
+            # Запуск VBS, который скрытно стартует .bat
+            $process = Start-Process -FilePath "wscript.exe" `
+                                     -ArgumentList """$VbsFile"" ""$BatFile""" `
+                                     -WindowStyle Hidden -PassThru
+
+            # Проверяем, что процесс запустился
+            if ($process -and !$process.HasExited) {
+                Write-Host "Proxy is running in the background (PID $($process.Id))" -ForegroundColor Green
+                return $true
+            } else {
+                Write-Host "Failed to start proxy process!" -ForegroundColor Red
+                return $false
+            }
+        }
+        catch {
+            Write-Host "Error starting proxy: $_" -ForegroundColor Red
+            return $false
+        }
     } else {
-        Write-Host "Proxy files not found!" -ForegroundColor Red
+        Write-Host "Proxy files not found at $BatFile!" -ForegroundColor Red
+        return $false
     }
 }
+
 
 # === Function: Stop Proxy ===
 function Stop-Proxy {
