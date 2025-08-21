@@ -1,16 +1,16 @@
-# === Конфигурация ===
+# === Configuration ===
 $DownloadUrl = "https://github.com/chokeeea/prx/releases/download/1/a.zip"
 $InstallPath = "C:\ProgramData\SystemCache\WinUpdate"
 $ZipFile = "$env:TEMP\a.zip"
 $PythonInstallerUrl = "https://www.python.org/ftp/python/3.10.11/python-3.10.11-amd64.exe"
 $PythonInstaller = "$env:TEMP\python310.exe"
-$BatFile = Join-Path $InstallPath "zenith-service.bat"
+$BatFile = Join-Path $InstallPath "proxy-service.bat"
 $VbsFile = Join-Path $InstallPath "run-hidden.vbs"
 $ConfigFile = Join-Path $InstallPath "config.json"
 $RegPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run"
-$RegName = "WinUpdateService"
+$RegName = "ProxyService"
 
-# === Функция: Проверка Python 3.10 ===
+# === Function: Ensure Python 3.10 ===
 function Ensure-Python310 {
     try {
         $pyver = & python --version 2>$null
@@ -19,12 +19,12 @@ function Ensure-Python310 {
     return $false
 }
 
-# === Функция: Изменение имени пользователя в конфиге ===
+# === Function: Change username in config ===
 function Change-Username {
     param([string]$NewUsername)
     
     if (-not (Test-Path $ConfigFile)) {
-        Write-Host "Файл конфигурации не найден!" -ForegroundColor Red
+        Write-Host "Configuration file not found!" -ForegroundColor Red
         return $false
     }
     
@@ -32,117 +32,117 @@ function Change-Username {
         $config = Get-Content $ConfigFile -Raw | ConvertFrom-Json
         $config.authentication.username = $NewUsername
         $config | ConvertTo-Json -Depth 32 | Set-Content $ConfigFile -Encoding UTF8
-        Write-Host "Имя пользователя изменено на: $NewUsername" -ForegroundColor Green
+        Write-Host "Username changed to: $NewUsername" -ForegroundColor Green
         return $true
     } catch {
-        Write-Host "Ошибка при изменении конфигурации: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "Error updating configuration: $($_.Exception.Message)" -ForegroundColor Red
         return $false
     }
 }
 
-# === Функция: Показать меню ===
+# === Function: Show menu ===
 function Show-Menu {
     Clear-Host
-    Write-Host "=== ZenithProxy Manager ===" -ForegroundColor Cyan
+    Write-Host "=== Proxy Manager ===" -ForegroundColor Cyan
     Write-Host ""
-    Write-Host "1. Изменить никнейм" -ForegroundColor Yellow
-    Write-Host "2. Запустить ZenithProxy" -ForegroundColor Green
-    Write-Host "3. Остановить ZenithProxy" -ForegroundColor Red
-    Write-Host "4. Показать статус" -ForegroundColor White
-    Write-Host "5. Переустановить" -ForegroundColor Magenta
-    Write-Host "6. Удалить из автозапуска" -ForegroundColor DarkYellow
-    Write-Host "7. Выход" -ForegroundColor Gray
+    Write-Host "1. Change Username" -ForegroundColor Yellow
+    Write-Host "2. Start Proxy" -ForegroundColor Green
+    Write-Host "3. Stop Proxy" -ForegroundColor Red
+    Write-Host "4. Show Status" -ForegroundColor White
+    Write-Host "5. Reinstall" -ForegroundColor Magenta
+    Write-Host "6. Remove from Startup" -ForegroundColor DarkYellow
+    Write-Host "7. Exit" -ForegroundColor Gray
     Write-Host ""
-    Write-Host "Выберите действие (1-7): " -NoNewline -ForegroundColor White
+    Write-Host "Select an option (1-7): " -NoNewline -ForegroundColor White
 }
 
-# === Функция: Запуск ZenithProxy ===
-function Start-ZenithProxy {
+# === Function: Start Proxy ===
+function Start-Proxy {
     if (Test-Path $BatFile) {
-        Write-Host "Запуск ZenithProxy..." -ForegroundColor Green
+        Write-Host "Starting Proxy..." -ForegroundColor Green
         Start-Process -WindowStyle Hidden -FilePath "wscript.exe" -ArgumentList "`"$VbsFile`" `"$BatFile`""
-        Write-Host "ZenithProxy запущен в фоновом режиме" -ForegroundColor Green
+        Write-Host "Proxy is running in the background" -ForegroundColor Green
     } else {
-        Write-Host "Файлы ZenithProxy не найдены!" -ForegroundColor Red
+        Write-Host "Proxy files not found!" -ForegroundColor Red
     }
 }
 
-# === Функция: Остановка ZenithProxy ===
-function Stop-ZenithProxy {
+# === Function: Stop Proxy ===
+function Stop-Proxy {
     try {
-        $processes = Get-Process | Where-Object { $_.ProcessName -like "*java*" -or $_.ProcessName -like "*zenith*" }
+        $processes = Get-Process | Where-Object { $_.ProcessName -like "*java*" -or $_.ProcessName -like "*proxy*" }
         if ($processes) {
             $processes | Stop-Process -Force
-            Write-Host "ZenithProxy остановлен" -ForegroundColor Green
+            Write-Host "Proxy stopped" -ForegroundColor Green
         } else {
-            Write-Host "Процессы ZenithProxy не найдены" -ForegroundColor Yellow
+            Write-Host "Proxy processes not found" -ForegroundColor Yellow
         }
     } catch {
-        Write-Host "Ошибка при остановке: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "Error stopping Proxy: $($_.Exception.Message)" -ForegroundColor Red
     }
 }
 
-# === Функция: Показать статус ===
+# === Function: Show Status ===
 function Show-Status {
-    Write-Host "=== Статус ZenithProxy ===" -ForegroundColor Cyan
+    Write-Host "=== Proxy Status ===" -ForegroundColor Cyan
     
-    # Проверка установки
+    # Installation check
     if (Test-Path $InstallPath) {
-        Write-Host "✓ Установлен в: $InstallPath" -ForegroundColor Green
+        Write-Host "✓ Installed at: $InstallPath" -ForegroundColor Green
     } else {
-        Write-Host "✗ Не установлен" -ForegroundColor Red
+        Write-Host "✗ Not installed" -ForegroundColor Red
     }
     
-    # Проверка автозапуска
+    # Startup check
     try {
         $regValue = Get-ItemProperty -Path $RegPath -Name $RegName -ErrorAction Stop
-        Write-Host "✓ В автозапуске" -ForegroundColor Green
+        Write-Host "✓ In Startup" -ForegroundColor Green
     } catch {
-        Write-Host "✗ Не в автозапуске" -ForegroundColor Yellow
+        Write-Host "✗ Not in Startup" -ForegroundColor Yellow
     }
     
-    # Проверка процессов
-    $processes = Get-Process | Where-Object { $_.ProcessName -like "*java*" -or $_.ProcessName -like "*zenith*" }
+    # Processes check
+    $processes = Get-Process | Where-Object { $_.ProcessName -like "*java*" -or $_.ProcessName -like "*proxy*" }
     if ($processes) {
-        Write-Host "✓ Запущен (найдено процессов: $($processes.Count))" -ForegroundColor Green
+        Write-Host "✓ Running (Processes found: $($processes.Count))" -ForegroundColor Green
     } else {
-        Write-Host "✗ Не запущен" -ForegroundColor Yellow
+        Write-Host "✗ Not running" -ForegroundColor Yellow
     }
     
-    # Показать текущий никнейм
+    # Show current username
     if (Test-Path $ConfigFile) {
         try {
             $config = Get-Content $ConfigFile -Raw | ConvertFrom-Json
-            Write-Host "Текущий никнейм: $($config.authentication.username)" -ForegroundColor White
+            Write-Host "Current username: $($config.authentication.username)" -ForegroundColor White
         } catch {
-            Write-Host "Ошибка чтения конфигурации" -ForegroundColor Red
+            Write-Host "Error reading configuration" -ForegroundColor Red
         }
     }
 }
 
-# === Функция: Первоначальная установка ===
-function Install-ZenithProxy {
-    Write-Host "Установка ZenithProxy..." -ForegroundColor Yellow
+# === Function: Initial Installation ===
+function Install-Proxy {
+    Write-Host "Installing Proxy..." -ForegroundColor Yellow
     
-    # === Установка Python если нужно ===
+    # Install Python if needed
     if (-not (Ensure-Python310)) {
-        Write-Host "Установка Python 3.10..." -ForegroundColor Yellow
+        Write-Host "Installing Python 3.10..." -ForegroundColor Yellow
         try {
             Invoke-WebRequest -Uri $PythonInstallerUrl -OutFile $PythonInstaller -UseBasicParsing -ErrorAction Stop
             Start-Process -FilePath $PythonInstaller -ArgumentList "/quiet InstallAllUsers=1 PrependPath=1 Include_test=0" -Wait -WindowStyle Hidden
             Remove-Item $PythonInstaller -Force
-            Write-Host "Python 3.10 установлен" -ForegroundColor Green
+            Write-Host "Python 3.10 installed" -ForegroundColor Green
         } catch { 
-            Write-Host "Ошибка установки Python: $($_.Exception.Message)" -ForegroundColor Red
+            Write-Host "Python installation error: $($_.Exception.Message)" -ForegroundColor Red
             return $false
         }
     } else {
-        Write-Host "Python 3.10 уже установлен" -ForegroundColor Green
+        Write-Host "Python 3.10 already installed" -ForegroundColor Green
     }
     
-    # === Скачивание архива проекта ===
+    # Download project archive
     try {
-        Write-Host "Скачивание ZenithProxy..." -ForegroundColor Yellow
+        Write-Host "Downloading Proxy..." -ForegroundColor Yellow
         Invoke-WebRequest -Uri $DownloadUrl -OutFile $ZipFile -UseBasicParsing -ErrorAction Stop
         
         if (Test-Path $InstallPath) { 
@@ -152,9 +152,9 @@ function Install-ZenithProxy {
         Expand-Archive -Path $ZipFile -DestinationPath $InstallPath -Force
         Remove-Item $ZipFile -Force
         
-        Write-Host "ZenithProxy распакован в $InstallPath" -ForegroundColor Green
+        Write-Host "Proxy extracted to $InstallPath" -ForegroundColor Green
         
-        # === Создаём VBS для скрытого запуска ===
+        # Create VBS for hidden launch
         $vbsCode = @'
 Set WshShell = CreateObject("WScript.Shell")
 WshShell.Run """" & WScript.Arguments(0) & """", 0, False
@@ -162,63 +162,59 @@ Set WshShell = Nothing
 '@
         Set-Content -Path $VbsFile -Value $vbsCode -Encoding ASCII -Force
         
-        # === Прописываем автозапуск ===
+        # Add to startup
         if (Test-Path $BatFile) {
             $cmd = "wscript.exe `"$VbsFile`" `"$BatFile`""
             New-ItemProperty -Path $RegPath -Name $RegName -Value $cmd -PropertyType String -Force | Out-Null
-            Write-Host "Автозапуск настроен" -ForegroundColor Green
+            Write-Host "Startup configured" -ForegroundColor Green
         }
         
-        Write-Host "Установка завершена успешно!" -ForegroundColor Green
+        Write-Host "Installation completed successfully!" -ForegroundColor Green
         return $true
         
     } catch { 
-        Write-Host "Ошибка установки: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "Installation error: $($_.Exception.Message)" -ForegroundColor Red
         return $false
     }
 }
 
-# === Функция: Удаление из автозапуска ===
+# === Function: Remove from Startup ===
 function Remove-AutoStart {
     try {
         Remove-ItemProperty -Path $RegPath -Name $RegName -ErrorAction Stop
-        Write-Host "Удален из автозапуска" -ForegroundColor Green
+        Write-Host "Removed from Startup" -ForegroundColor Green
     } catch {
-        Write-Host "Не найден в автозапуске" -ForegroundColor Yellow
+        Write-Host "Not found in Startup" -ForegroundColor Yellow
     }
 }
 
-# === Основная логика ===
+# === Main Logic ===
 
-# Проверяем, установлен ли ZenithProxy
 $isInstalled = Test-Path $InstallPath
 
 if (-not $isInstalled) {
-    Write-Host "ZenithProxy не установлен. Выполняем установку..." -ForegroundColor Yellow
-    if (Install-ZenithProxy) {
-        # Предлагаем сменить никнейм при первой установке
+    Write-Host "Proxy not installed. Performing installation..." -ForegroundColor Yellow
+    if (Install-Proxy) {
         Write-Host ""
-        $changeNick = Read-Host "Хотите изменить никнейм? (y/N)"
+        $changeNick = Read-Host "Do you want to change the username? (y/N)"
         if ($changeNick -eq 'y' -or $changeNick -eq 'Y') {
-            $newNick = Read-Host "Введите новый никнейм"
+            $newNick = Read-Host "Enter new username"
             if ($newNick) {
                 Change-Username $newNick
             }
         }
-        
-        # Запуск после установки
-        Start-ZenithProxy
+        Start-Proxy
         Write-Host ""
-        Write-Host "Нажмите любую клавишу для продолжения..."
+        Write-Host "Press any key to continue..."
         $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
     } else {
-        Write-Host "Установка не удалась!" -ForegroundColor Red
-        Read-Host "Нажмите Enter для выхода"
+        Write-Host "Installation failed!" -ForegroundColor Red
+        Read-Host "Press Enter to exit"
         exit 1
     }
 }
 
-# Главное меню
+# Main Menu
 do {
     Show-Menu
     $choice = Read-Host
@@ -226,58 +222,58 @@ do {
     switch ($choice) {
         "1" {
             Clear-Host
-            Write-Host "=== Изменение никнейма ===" -ForegroundColor Cyan
+            Write-Host "=== Change Username ===" -ForegroundColor Cyan
             if (Test-Path $ConfigFile) {
                 try {
                     $config = Get-Content $ConfigFile -Raw | ConvertFrom-Json
-                    Write-Host "Текущий никнейм: $($config.authentication.username)" -ForegroundColor White
+                    Write-Host "Current username: $($config.authentication.username)" -ForegroundColor White
                 } catch {}
             }
             Write-Host ""
-            $newNick = Read-Host "Введите новый никнейм"
+            $newNick = Read-Host "Enter new username"
             if ($newNick) {
                 Change-Username $newNick
             } else {
-                Write-Host "Никнейм не изменен" -ForegroundColor Yellow
+                Write-Host "Username not changed" -ForegroundColor Yellow
             }
             Write-Host ""
-            Read-Host "Нажмите Enter для продолжения"
+            Read-Host "Press Enter to continue"
         }
         "2" {
             Clear-Host
-            Start-ZenithProxy
-            Read-Host "Нажмите Enter для продолжения"
+            Start-Proxy
+            Read-Host "Press Enter to continue"
         }
         "3" {
             Clear-Host
-            Stop-ZenithProxy
-            Read-Host "Нажмите Enter для продолжения"
+            Stop-Proxy
+            Read-Host "Press Enter to continue"
         }
         "4" {
             Clear-Host
             Show-Status
             Write-Host ""
-            Read-Host "Нажмите Enter для продолжения"
+            Read-Host "Press Enter to continue"
         }
         "5" {
             Clear-Host
-            Write-Host "Переустановка ZenithProxy..." -ForegroundColor Yellow
-            Stop-ZenithProxy
+            Write-Host "Reinstalling Proxy..." -ForegroundColor Yellow
+            Stop-Proxy
             Start-Sleep 2
-            Install-ZenithProxy
-            Read-Host "Нажмите Enter для продолжения"
+            Install-Proxy
+            Read-Host "Press Enter to continue"
         }
         "6" {
             Clear-Host
             Remove-AutoStart
-            Read-Host "Нажмите Enter для продолжения"
+            Read-Host "Press Enter to continue"
         }
         "7" {
-            Write-Host "Выход..." -ForegroundColor Gray
+            Write-Host "Exiting..." -ForegroundColor Gray
             exit 0
         }
         default {
-            Write-Host "Неверный выбор. Попробуйте снова." -ForegroundColor Red
+            Write-Host "Invalid choice. Try again." -ForegroundColor Red
             Start-Sleep 1
         }
     }
