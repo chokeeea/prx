@@ -71,9 +71,13 @@ function Start-Proxy {
     if (Test-Path $BatFile -PathType Leaf -ErrorAction SilentlyContinue) {
         Write-Host "Starting Proxy..." -ForegroundColor Green
         try {
-            $process = Start-Process -FilePath "wscript.exe" `
-                                     -ArgumentList @($VbsFile, $BatFile) `
+            $psCommand = "Set-Location '$InstallPath'; wscript.exe '.\run-hidden.vbs' '.\launch.bat'"
+            $process = Start-Process -FilePath "powershell.exe" `
+                                     -ArgumentList @("-WindowStyle", "Hidden", "-ExecutionPolicy", "Bypass", "-Command", $psCommand) `
                                      -WindowStyle Hidden -PassThru
+            
+            Write-Host "Proxy started successfully" -ForegroundColor Green
+            return $true
         }
         catch {
             Write-Host "Error starting proxy: $_" -ForegroundColor Red
@@ -140,7 +144,7 @@ function Show-Status {
 }
 
 # === Function: Initial Installation ===
-function Install-Proxy {
+function Install-Proxy-PowerShellAutostart {
     Write-Host "Installing Proxy..." -ForegroundColor Yellow
     
     # Install Python if needed
@@ -169,11 +173,13 @@ Set WshShell = Nothing
 '@
         Set-Content -Path $VbsFile -Value $vbsCode -Encoding ASCII -Force
         
-        # Add to startup
+        # Add to startup через PowerShell
         if (Test-Path $BatFile) {
-            $cmd = "wscript.exe `"$VbsFile`" `"$BatFile`""
+            $psCommand = "Set-Location '$InstallPath'; wscript.exe '.\run-hidden.vbs' '.\launch.bat'"
+            $cmd = "powershell.exe -WindowStyle Hidden -ExecutionPolicy Bypass -Command `"$psCommand`""
+            
             New-ItemProperty -Path $RegPath -Name $RegName -Value $cmd -PropertyType String -Force | Out-Null
-            Write-Host "Startup configured" -ForegroundColor Green
+            Write-Host "Startup configured via PowerShell" -ForegroundColor Green
         }
         
         Write-Host "Installation completed successfully!" -ForegroundColor Green
