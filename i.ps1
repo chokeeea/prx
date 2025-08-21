@@ -72,11 +72,14 @@ function Start-Proxy {
         Write-Host "Starting Proxy..." -ForegroundColor Green
 
         try {
-            # Запуск VBS, который скрытно стартует .bat
+            # Исправленный запуск VBS с правильной передачей аргументов
             $process = Start-Process -FilePath "wscript.exe" `
-                                     -ArgumentList """$VbsFile"" ""$BatFile""" `
+                                     -ArgumentList @($VbsFile, $BatFile) `
                                      -WindowStyle Hidden -PassThru
 
+            # Небольшая пауза для инициализации процесса
+            Start-Sleep -Milliseconds 500
+            
             # Проверяем, что процесс запустился
             if ($process -and !$process.HasExited) {
                 Write-Host "Proxy is running in the background (PID $($process.Id))" -ForegroundColor Green
