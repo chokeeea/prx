@@ -70,20 +70,20 @@ function Show-Menu {
 function Start-Proxy {
     if (Test-Path $BatFile -PathType Leaf -ErrorAction SilentlyContinue) {
         Write-Host "Starting Proxy..." -ForegroundColor Green
-
         try {
-            Start-Process -FilePath "wscript.exe" `
-                         -ArgumentList @($VbsFile, $BatFile) `
-                         -WindowStyle Hidden
-
-            Write-Host "Proxy started" -ForegroundColor Green
+            $process = Start-Process -FilePath "wscript.exe" `
+                                     -ArgumentList @($VbsFile, $BatFile) `
+                                     -WindowStyle Hidden -PassThru
         }
         catch {
             Write-Host "Error starting proxy: $_" -ForegroundColor Red
+            return $false
         }
     } else {
         Write-Host "Proxy files not found at $BatFile!" -ForegroundColor Red
+        return $false
     }
+}
 
 
 # === Function: Stop Proxy ===
