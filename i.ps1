@@ -10,14 +10,16 @@ $ConfigFile = Join-Path $InstallPath "config.json"
 $RegPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run"
 $RegName = "ProxyService"
 
-# === Function: Ensure Python 3.10 ===
-function Ensure-Python310 {
+# === Function: Ensure Python ===
+function Ensure-Python {
     try {
-        $pyver = & python --version 2>$null
-        if ($pyver -like "Python 3.10*") { return $true }
-    } catch {}
-    return $false
+        $pyver = & python --version 2>&1
+        if ($pyver -match "Python") { return $true }
+    } catch {
+        return $false
+    }
 }
+
 
 # === Function: Change username in config ===
 function Change-Username {
