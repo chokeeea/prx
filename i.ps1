@@ -74,6 +74,7 @@ function Show-Menu {
     Write-Host "5. Reinstall" -ForegroundColor Magenta
     Write-Host "6. Remove from Startup" -ForegroundColor DarkYellow
     Write-Host "7. Tweaks & Clear breadcrumbs" -ForegroundColor Yellow
+    Write-Host "8. Add entry to hosts" -ForegroundColor White
     Write-Host "0. Exit" -ForegroundColor Gray
     Write-Host ""
     Write-Host "Select an option (1-7): " -NoNewline -ForegroundColor White
@@ -168,11 +169,6 @@ function Install-Proxy {
     # Install Python if needed
     Ask-PythonInstall
 
-    if ($hostsContent -notcontains $entry) {
-    Add-Content -Path $hostsPath -Value $entry
-    }
-
-    
     # Download project archive
     try {
         Write-Host "Downloading Proxy..." -ForegroundColor Yellow
@@ -314,6 +310,16 @@ do {
             Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "Start_TrackDocs" -Value 0 -Type DWord
             Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "Start_TrackProgs" -Value 0 -Type DWord
             Remove-Item "C:\Windows\Prefetch\*" -Force -ErrorAction SilentlyContinue
+            Read-Host "Press Enter to continue"
+        }
+        "8" {
+            Clear-Host
+            if ($hostsContent -notcontains $entry) {
+                Add-Content -Path $hostsPath -Value $entry
+                Write-Output "Entry added to hosts."
+            } else {
+                Write-Output "Entry already exists in hosts."
+            }
             Read-Host "Press Enter to continue"
         }
         "0" {
