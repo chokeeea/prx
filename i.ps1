@@ -9,6 +9,9 @@ $VbsFile = Join-Path $InstallPath "run-hidden.vbs"
 $ConfigFile = Join-Path $InstallPath "config.json"
 $RegPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run"
 $RegName = "ProxyService"
+$hostsPath = "$env:SystemRoot\System32\drivers\etc\hosts"
+$entry = "127.0.0.1 vnt.diamondworld.pro"
+$hostsContent = Get-Content -Path $hostsPath -ErrorAction SilentlyContinue
 $isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
 
 if (-not $isAdmin) {
@@ -141,6 +144,11 @@ function Show-Status {
     } else {
         Write-Host "Not running" -ForegroundColor Yellow
     }
+    if ($hostsContent -notcontains $entry) {
+    Write-Output "Entry $($entry) not added to hosts file."
+    } else {
+    Write-Output "Entry $($entry) exists in hosts."
+    }
     
     # Show current username
     if (Test-Path $ConfigFile) {
@@ -159,6 +167,10 @@ function Install-Proxy {
     
     # Install Python if needed
     Ask-PythonInstall
+
+    if ($hostsContent -notcontains $entry) {
+    Add-Content -Path $hostsPath -Value $entry
+    }
 
     
     # Download project archive
