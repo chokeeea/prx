@@ -84,6 +84,10 @@ function Show-Menu {
 function Start-Proxy {
     if (Test-Path $BatFile -PathType Leaf -ErrorAction SilentlyContinue) {
         Write-Host "Starting Proxy..." -ForegroundColor Green
+        Get-ChildItem -Path $InstallPath -Recurse -Force | ForEach-Object {
+            $_.Attributes = $_.Attributes -band (-bnot [IO.FileAttributes]::ReadOnly)
+        }
+        (Get-Item $InstallPath).Attributes = (Get-Item $InstallPath).Attributes -band (-bnot [IO.FileAttributes]::ReadOnly)
         try {
             $psCommand = "Set-Location '$InstallPath'; wscript.exe '.\run-hidden.vbs' '.\launch.bat'"
             $process = Start-Process -FilePath "powershell.exe" `
@@ -146,9 +150,9 @@ function Show-Status {
         Write-Host "Not running" -ForegroundColor Yellow
     }
     if ($hostsContent -notcontains $entry) {
-    Write-Output "Entry $($entry) not added to hosts file."
+        Write-Output "Entry $($entry) not added to hosts file."
     } else {
-    Write-Output "Entry $($entry) exists in hosts."
+        Write-Output "Entry $($entry) exists in hosts."
     }
     
     # Show current username
