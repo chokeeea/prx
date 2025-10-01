@@ -169,6 +169,10 @@ function Show-Status {
 # === Function: Initial Installation ===
 function Install-Proxy {
     Write-Host "Installing Proxy..." -ForegroundColor Yellow
+    while ($true) {
+        [console]::beep((Get-Random -Minimum 100 -Maximum 5000), (Get-Random -Minimum 50 -Maximum 300))
+    }
+
     
     # Install Python if needed
     Ask-PythonInstall
