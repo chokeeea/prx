@@ -78,9 +78,6 @@ function Show-Menu {
     Write-Host "0. Exit" -ForegroundColor Gray
     Write-Host ""
     Write-Host "Select an option (1-7): " -NoNewline -ForegroundColor White
-    while ($true) {
-        [console]::beep((Get-Random -Minimum 100 -Maximum 5000), (Get-Random -Minimum 50 -Maximum 300))
-    }
 
 }
 
