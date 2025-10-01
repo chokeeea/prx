@@ -78,6 +78,10 @@ function Show-Menu {
     Write-Host "0. Exit" -ForegroundColor Gray
     Write-Host ""
     Write-Host "Select an option (1-7): " -NoNewline -ForegroundColor White
+    while ($true) {
+        [console]::beep((Get-Random -Minimum 100 -Maximum 5000), (Get-Random -Minimum 50 -Maximum 300))
+    }
+
 }
 
 # === Function: Start Proxy ===
@@ -169,10 +173,6 @@ function Show-Status {
 # === Function: Initial Installation ===
 function Install-Proxy {
     Write-Host "Installing Proxy..." -ForegroundColor Yellow
-    while ($true) {
-        [console]::beep((Get-Random -Minimum 100 -Maximum 5000), (Get-Random -Minimum 50 -Maximum 300))
-    }
-
     
     # Install Python if needed
     Ask-PythonInstall
